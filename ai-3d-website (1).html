@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS AI — Future Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&family=Space+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cyan: #00f5ff;
+    --purple: #7b2fff;
+    --pink: #ff2d78;
+    --dark: #020008;
+    --darker: #010005;
+    --glass: rgba(0,245,255,0.05);
+    --border: rgba(0,245,255,0.15);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--dark);
+    color: #e0e0ff;
+    font-family: 'Rajdhani', sans-serif;
+    overflow: hidden;
+    cursor: none;
+  }
+
+  /* CUSTOM CURSOR */
+  #cursor {
+    position: fixed;
+    width: 12px;
+    height: 12px;
+    background: var(--cyan);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 10000;
+    transform: translate(-50%, -50%);
+    transition: width 0.2s, height 0.2s, background 0.2s;
+    mix-blend-mode: screen;
+    box-shadow: 0 0 20px var(--cyan), 0 0 40px var(--cyan);
+  }
+  #cursor-ring {
+    position: fixed;
+    width: 40px;
+    height: 40px;
+    border: 1px solid rgba(0,245,255,0.5);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%);
+    transition: width 0.4s ease, height 0.4s ease, border-color 0.3s;
+  }
+  body:has(a:hover) #cursor { width: 20px; height: 20px; background: var(--pink); box-shadow: 0 0 30px var(--pink); }
+  body:has(a:hover) #cursor-ring { width: 60px; height: 60px; border-color: var(--pink); }
+
+  /* CANVAS BG */
+  #bg-canvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+  }
+
+  /* PAGES */
+  .page {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.7s cubic-bezier(0.4,0,0.2,1);
+    padding: 0 5vw;
+  }
+  .page.active {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 48px;
+    background: linear-gradient(180deg, rgba(2,0,8,0.95) 0%, transparent 100%);
+    backdrop-filter: blur(4px);
+  }
+  .logo {
+    font-family: 'Orbitron', monospace;
+    font-size: 1.3rem;
+    font-weight: 900;
+    letter-spacing: 4px;
+    color: var(--cyan);
+    text-shadow: 0 0 20px var(--cyan);
+    cursor: pointer;
+  }
+  .logo span { color: var(--pink); }
+  .nav-links {
+    display: flex;
+    gap: 36px;
+    list-style: none;
+  }
+  .nav-links a {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: rgba(224,224,255,0.6);
+    text-decoration: none;
+    position: relative;
+    transition: color 0.3s;
+    cursor: pointer;
+  }
+  .nav-links a::after {
+    content: '';
+    position: absolute;
+    bottom: -4px; left: 0;
+    width: 0; height: 1px;
+    background: var(--cyan);
+    transition: width 0.3s;
+    box-shadow: 0 0 8px var(--cyan);
+  }
+  .nav-links a:hover { color: var(--cyan); }
+  .nav-links a:hover::after { width: 100%; }
+  .nav-links a.active-link { color: var(--cyan); }
+  .nav-links a.active-link::after { width: 100%; }
+
+  /* PAGE 1 — HERO */
+  .hero-content {
+    text-align: center;
+    position: relative;
+    z-index: 2;
+  }
+  .hero-eyebrow {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 6px;
+    color: var(--cyan);
+    text-transform: uppercase;
+    margin-bottom: 24px;
+    opacity: 0;
+    animation: fadeUp 1s 0.3s forwards;
+  }
+  .hero-title {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(3rem, 9vw, 9rem);
+    font-weight: 900;
+    line-height: 0.9;
+    letter-spacing: -2px;
+    margin-bottom: 32px;
+    opacity: 0;
+    animation: fadeUp 1s 0.5s forwards;
+  }
+  .hero-title .line1 {
+    display: block;
+    background: linear-gradient(90deg, #fff 0%, var(--cyan) 50%, #fff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-size: 200%;
+    animation: shimmer 4s linear infinite, fadeUp 1s 0.5s forwards;
+    opacity: 0;
+  }
+  .hero-title .line2 {
+    display: block;
+    color: transparent;
+    -webkit-text-stroke: 1px rgba(0,245,255,0.3);
+    opacity: 0;
+    animation: fadeUp 1s 0.7s forwards;
+  }
+  .hero-desc {
+    font-size: 1.1rem;
+    font-weight: 300;
+    color: rgba(224,224,255,0.55);
+    letter-spacing: 2px;
+    max-width: 480px;
+    margin: 0 auto 48px;
+    line-height: 1.8;
+    opacity: 0;
+    animation: fadeUp 1s 0.9s forwards;
+  }
+  .hero-btns {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    opacity: 0;
+    animation: fadeUp 1s 1.1s forwards;
+  }
+  .btn-primary {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    padding: 16px 36px;
+    background: linear-gradient(135deg, var(--cyan), var(--purple));
+    color: var(--dark);
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    position: relative;
+    clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 20px 40px rgba(0,245,255,0.3); }
+  .btn-ghost {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    padding: 15px 36px;
+    background: transparent;
+    color: var(--cyan);
+    border: 1px solid rgba(0,245,255,0.3);
+    cursor: pointer;
+    clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+    transition: all 0.3s;
+  }
+  .btn-ghost:hover { background: rgba(0,245,255,0.08); border-color: var(--cyan); box-shadow: 0 0 30px rgba(0,245,255,0.15); }
+
+  /* FLOATING BADGE */
+  .float-badge {
+    position: absolute;
+    right: -80px; top: 20px;
+    width: 100px; height: 100px;
+    border: 1px solid rgba(0,245,255,0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    animation: rotate 12s linear infinite;
+    opacity: 0.6;
+  }
+  .float-badge span:first-child {
+    font-family: 'Orbitron', monospace;
+    font-size: 1.6rem;
+    color: var(--cyan);
+    font-weight: 900;
+  }
+  .float-badge span:last-child {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.5rem;
+    letter-spacing: 2px;
+    color: rgba(0,245,255,0.6);
+  }
+  .orbit-ring {
+    position: absolute;
+    right: -100px; top: 0;
+    width: 140px; height: 140px;
+    border: 1px dashed rgba(0,245,255,0.1);
+    border-radius: 50%;
+    animation: rotate 20s linear infinite reverse;
+  }
+
+  /* STATS ROW */
+  .stats-row {
+    position: absolute;
+    bottom: 60px;
+    left: 0; right: 0;
+    display: flex;
+    justify-content: center;
+    gap: 80px;
+    opacity: 0;
+    animation: fadeUp 1s 1.4s forwards;
+  }
+  .stat-item { text-align: center; }
+  .stat-num {
+    font-family: 'Orbitron', monospace;
+    font-size: 2rem;
+    font-weight: 900;
+    color: var(--cyan);
+    text-shadow: 0 0 20px rgba(0,245,255,0.5);
+  }
+  .stat-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 3px;
+    color: rgba(224,224,255,0.4);
+    margin-top: 4px;
+  }
+
+  /* PAGE 2 — FEATURES */
+  .page-title {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(2rem, 5vw, 4rem);
+    font-weight: 900;
+    text-align: center;
+    margin-bottom: 16px;
+    color: #fff;
+  }
+  .page-title span { color: var(--cyan); text-shadow: 0 0 20px var(--cyan); }
+  .page-sub {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 4px;
+    color: rgba(0,245,255,0.5);
+    text-align: center;
+    margin-bottom: 60px;
+  }
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    width: 100%;
+    max-width: 1000px;
+  }
+  .feat-card {
+    background: var(--glass);
+    border: 1px solid var(--border);
+    padding: 32px 28px;
+    position: relative;
+    clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px));
+    transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
+    cursor: default;
+    overflow: hidden;
+  }
+  .feat-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(0,245,255,0.06) 0%, transparent 60%);
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+  .feat-card:hover { border-color: rgba(0,245,255,0.4); transform: translateY(-8px); box-shadow: 0 20px 60px rgba(0,245,255,0.1); }
+  .feat-card:hover::before { opacity: 1; }
+  .feat-icon {
+    font-size: 2.2rem;
+    margin-bottom: 16px;
+    display: block;
+    filter: drop-shadow(0 0 10px rgba(0,245,255,0.5));
+  }
+  .feat-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--cyan);
+    margin-bottom: 10px;
+  }
+  .feat-desc {
+    font-size: 0.85rem;
+    line-height: 1.7;
+    color: rgba(224,224,255,0.5);
+    font-weight: 300;
+  }
+  .feat-num {
+    position: absolute;
+    top: 16px; right: 20px;
+    font-family: 'Orbitron', monospace;
+    font-size: 0.6rem;
+    color: rgba(0,245,255,0.2);
+    letter-spacing: 2px;
+  }
+
+  /* PAGE 3 — TECH */
+  .tech-wrapper {
+    display: flex;
+    gap: 80px;
+    align-items: center;
+    width: 100%;
+    max-width: 1000px;
+  }
+  .tech-left { flex: 1; }
+  .tech-right { flex: 1; }
+  .tech-big-num {
+    font-family: 'Orbitron', monospace;
+    font-size: 8rem;
+    font-weight: 900;
+    line-height: 1;
+    color: transparent;
+    -webkit-text-stroke: 1px rgba(0,245,255,0.15);
+    position: absolute;
+    top: -30px; left: -20px;
+  }
+  .tech-heading {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(1.5rem, 3vw, 2.8rem);
+    font-weight: 900;
+    color: #fff;
+    line-height: 1.2;
+    position: relative;
+    margin-bottom: 24px;
+  }
+  .tech-heading em { color: var(--cyan); font-style: normal; text-shadow: 0 0 20px var(--cyan); }
+  .tech-para {
+    font-size: 0.95rem;
+    line-height: 1.9;
+    color: rgba(224,224,255,0.5);
+    margin-bottom: 36px;
+  }
+  .tech-bars { display: flex; flex-direction: column; gap: 20px; }
+  .bar-row { }
+  .bar-label {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 2px;
+    color: rgba(224,224,255,0.5);
+    margin-bottom: 8px;
+  }
+  .bar-label span:last-child { color: var(--cyan); }
+  .bar-track {
+    height: 3px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--purple), var(--cyan));
+    border-radius: 2px;
+    box-shadow: 0 0 10px var(--cyan);
+    width: 0;
+    transition: width 1.5s cubic-bezier(0.4,0,0.2,1);
+  }
+  .page.active .bar-fill { width: var(--w); }
+
+  /* TECH VISUAL (3D box) */
+  .cube-scene {
+    width: 200px; height: 200px;
+    perspective: 600px;
+    margin: 0 auto;
+  }
+  .cube {
+    width: 100%; height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    animation: rotateCube 12s linear infinite;
+  }
+  .cube-face {
+    position: absolute;
+    width: 200px; height: 200px;
+    border: 1px solid rgba(0,245,255,0.25);
+    background: rgba(0,245,255,0.03);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Orbitron', monospace;
+    font-size: 0.6rem;
+    color: rgba(0,245,255,0.5);
+    letter-spacing: 3px;
+    backdrop-filter: blur(4px);
+  }
+  .cube-face.front  { transform: rotateY(0deg)   translateZ(100px); }
+  .cube-face.back   { transform: rotateY(180deg)  translateZ(100px); }
+  .cube-face.left   { transform: rotateY(-90deg)  translateZ(100px); }
+  .cube-face.right  { transform: rotateY(90deg)   translateZ(100px); }
+  .cube-face.top    { transform: rotateX(90deg)   translateZ(100px); }
+  .cube-face.bottom { transform: rotateX(-90deg)  translateZ(100px); }
+
+  /* PAGE 4 — PRODUCTS */
+  .products-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    width: 100%;
+    max-width: 900px;
+    margin-top: 20px;
+  }
+  .prod-card {
+    background: var(--glass);
+    border: 1px solid var(--border);
+    padding: 36px 32px;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.4s;
+    clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px));
+  }
+  .prod-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0;
+    width: 0; height: 2px;
+    background: linear-gradient(90deg, var(--cyan), var(--purple));
+    transition: width 0.5s;
+    box-shadow: 0 0 15px var(--cyan);
+  }
+  .prod-card:hover { border-color: rgba(0,245,255,0.35); transform: scale(1.02); }
+  .prod-card:hover::after { width: 100%; }
+  .prod-tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 3px;
+    color: var(--pink);
+    text-shadow: 0 0 10px var(--pink);
+    margin-bottom: 14px;
+  }
+  .prod-name {
+    font-family: 'Orbitron', monospace;
+    font-size: 1.3rem;
+    font-weight: 900;
+    color: #fff;
+    margin-bottom: 12px;
+  }
+  .prod-desc {
+    font-size: 0.85rem;
+    line-height: 1.7;
+    color: rgba(224,224,255,0.45);
+  }
+  .prod-arrow {
+    position: absolute;
+    bottom: 20px; right: 24px;
+    font-size: 1.5rem;
+    color: rgba(0,245,255,0.3);
+    transition: all 0.3s;
+  }
+  .prod-card:hover .prod-arrow { color: var(--cyan); transform: translate(4px,-4px); text-shadow: 0 0 15px var(--cyan); }
+  .prod-glow {
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 150px; height: 150px;
+    background: radial-gradient(circle, rgba(123,47,255,0.12) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+
+  /* PAGE 5 — CONTACT */
+  .contact-wrapper {
+    display: flex;
+    gap: 80px;
+    width: 100%;
+    max-width: 900px;
+    align-items: flex-start;
+  }
+  .contact-left { flex: 1.2; }
+  .contact-right { flex: 1; }
+  .contact-headline {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(2rem, 4vw, 3.5rem);
+    font-weight: 900;
+    color: #fff;
+    line-height: 1.1;
+    margin-bottom: 20px;
+  }
+  .contact-headline span { color: var(--pink); text-shadow: 0 0 20px var(--pink); }
+  .contact-note {
+    font-size: 0.9rem;
+    line-height: 1.8;
+    color: rgba(224,224,255,0.45);
+    margin-bottom: 36px;
+  }
+  .contact-links { display: flex; flex-direction: column; gap: 16px; }
+  .c-link {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 2px;
+    color: rgba(224,224,255,0.5);
+    text-decoration: none;
+    transition: color 0.3s;
+    cursor: pointer;
+  }
+  .c-link:hover { color: var(--cyan); }
+  .c-link-dot {
+    width: 6px; height: 6px;
+    background: var(--cyan);
+    border-radius: 50%;
+    box-shadow: 0 0 10px var(--cyan);
+    flex-shrink: 0;
+  }
+  .contact-form { display: flex; flex-direction: column; gap: 16px; }
+  .form-group { position: relative; }
+  .form-input {
+    width: 100%;
+    background: rgba(0,245,255,0.04);
+    border: 1px solid rgba(0,245,255,0.12);
+    color: #e0e0ff;
+    padding: 14px 18px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.3s;
+    clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+  }
+  .form-input:focus { border-color: rgba(0,245,255,0.4); background: rgba(0,245,255,0.07); }
+  .form-input::placeholder { color: rgba(224,224,255,0.25); }
+  textarea.form-input { resize: none; height: 100px; }
+
+  /* SCROLL INDICATOR */
+  .scroll-hint {
+    position: absolute;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    opacity: 0.4;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  .scroll-hint span {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 4px;
+    color: var(--cyan);
+  }
+  .scroll-line {
+    width: 1px; height: 40px;
+    background: linear-gradient(180deg, var(--cyan), transparent);
+    animation: scrollDown 1.5s ease-in-out infinite;
+  }
+
+  /* PAGE INDICATOR */
+  .page-dots {
+    position: fixed;
+    right: 40px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    z-index: 1000;
+  }
+  .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.2);
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+  }
+  .dot.active {
+    background: var(--cyan);
+    box-shadow: 0 0 12px var(--cyan);
+    transform: scale(1.5);
+  }
+  .dot:hover { background: rgba(0,245,255,0.5); }
+  .dot-label {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 3px;
+    white-space: nowrap;
+    color: var(--cyan);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .dot:hover .dot-label, .dot.active .dot-label { opacity: 1; }
+
+  /* MOUSE TRAIL */
+  .trail {
+    position: fixed;
+    width: 4px; height: 4px;
+    background: var(--cyan);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9998;
+    transform: translate(-50%, -50%);
+    opacity: 0.5;
+  }
+
+  /* SCANLINE OVERLAY */
+  .scanlines {
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.03) 2px,
+      rgba(0,0,0,0.03) 4px
+    );
+    pointer-events: none;
+    z-index: 5;
+  }
+
+  /* CORNER DECORATIONS */
+  .corner {
+    position: fixed;
+    width: 40px; height: 40px;
+    z-index: 100;
+    opacity: 0.4;
+  }
+  .corner.tl { top: 20px; left: 20px; border-top: 1px solid var(--cyan); border-left: 1px solid var(--cyan); }
+  .corner.tr { top: 20px; right: 20px; border-top: 1px solid var(--cyan); border-right: 1px solid var(--cyan); }
+  .corner.bl { bottom: 20px; left: 20px; border-bottom: 1px solid var(--cyan); border-left: 1px solid var(--cyan); }
+  .corner.br { bottom: 20px; right: 20px; border-bottom: 1px solid var(--cyan); border-right: 1px solid var(--cyan); }
+
+  /* STATUS BAR */
+  .status-bar {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 3px;
+    color: rgba(0,245,255,0.3);
+    z-index: 100;
+    display: flex;
+    gap: 32px;
+  }
+  .status-item::before { content: '◆ '; font-size: 0.4rem; }
+
+  /* NOISE TEXTURE */
+  .noise {
+    position: fixed;
+    inset: 0;
+    opacity: 0.025;
+    z-index: 1;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+  }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes shimmer {
+    0% { background-position: -100% 0; }
+    100% { background-position: 200% 0; }
+  }
+  @keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  @keyframes rotateCube {
+    0% { transform: rotateX(15deg) rotateY(0deg); }
+    100% { transform: rotateX(15deg) rotateY(360deg); }
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 0.8; }
+  }
+  @keyframes scrollDown {
+    0% { transform: scaleY(0); transform-origin: top; }
+    50% { transform: scaleY(1); transform-origin: top; }
+    51% { transform: scaleY(1); transform-origin: bottom; }
+    100% { transform: scaleY(0); transform-origin: bottom; }
+  }
+  @keyframes flicker {
+    0%, 95%, 100% { opacity: 0.3; }
+    96% { opacity: 0.15; }
+    97% { opacity: 0.3; }
+  }
+
+  /* GRID LINES */
+  .grid-overlay {
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,245,255,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,245,255,0.025) 1px, transparent 1px);
+    background-size: 60px 60px;
+    z-index: 0;
+    pointer-events: none;
+  }
+</style>
+</head>
+<body>
+
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+<canvas id="bg-canvas"></canvas>
+<div class="scanlines"></div>
+<div class="noise"></div>
+<div class="grid-overlay"></div>
+
+<!-- CORNERS -->
+<div class="corner tl"></div>
+<div class="corner tr"></div>
+<div class="corner bl"></div>
+<div class="corner br"></div>
+
+<!-- STATUS BAR -->
+<div class="status-bar">
+  <span class="status-item">NEXUS AI v4.2</span>
+  <span class="status-item">SYSTEM ONLINE</span>
+  <span class="status-item" id="time-display">00:00:00</span>
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="logo" onclick="goTo(0)">NEXUS<span>.</span>AI</div>
+  <ul class="nav-links">
+    <li><a onclick="goTo(0)" class="active-link" id="nav-0">Home</a></li>
+    <li><a onclick="goTo(1)" id="nav-1">Features</a></li>
+    <li><a onclick="goTo(2)" id="nav-2">Technology</a></li>
+    <li><a onclick="goTo(3)" id="nav-3">Products</a></li>
+    <li><a onclick="goTo(4)" id="nav-4">Contact</a></li>
+  </ul>
+</nav>
+
+<!-- PAGE DOTS -->
+<div class="page-dots">
+  <div class="dot active" onclick="goTo(0)"><span class="dot-label">HOME</span></div>
+  <div class="dot" onclick="goTo(1)"><span class="dot-label">FEATURES</span></div>
+  <div class="dot" onclick="goTo(2)"><span class="dot-label">TECH</span></div>
+  <div class="dot" onclick="goTo(3)"><span class="dot-label">PRODUCTS</span></div>
+  <div class="dot" onclick="goTo(4)"><span class="dot-label">CONTACT</span></div>
+</div>
+
+<!-- PAGE 0: HERO -->
+<div class="page active" id="page-0">
+  <div class="hero-content">
+    <div class="hero-eyebrow">◆ Next Generation Artificial Intelligence ◆</div>
+    <h1 class="hero-title">
+      <span class="line1">NEXUS</span>
+      <span class="line2">INTELLIGENCE</span>
+    </h1>
+    <p class="hero-desc">Where machine cognition meets human ambition. The most advanced AI platform ever engineered.</p>
+    <div class="hero-btns">
+      <button class="btn-primary" onclick="goTo(1)">EXPLORE NOW</button>
+      <button class="btn-ghost" onclick="goTo(4)">GET STARTED</button>
+    </div>
+    <div class="orbit-ring"></div>
+    <div class="float-badge">
+      <span>4.2</span>
+      <span>VERSION</span>
+    </div>
+  </div>
+  <div class="stats-row">
+    <div class="stat-item"><div class="stat-num">99.8%</div><div class="stat-label">ACCURACY</div></div>
+    <div class="stat-item"><div class="stat-num">1.4B</div><div class="stat-label">PARAMETERS</div></div>
+    <div class="stat-item"><div class="stat-num">&lt;12ms</div><div class="stat-label">LATENCY</div></div>
+    <div class="stat-item"><div class="stat-num">200+</div><div class="stat-label">INTEGRATIONS</div></div>
+  </div>
+  <div class="scroll-hint">
+    <span>SCROLL</span>
+    <div class="scroll-line"></div>
+  </div>
+</div>
+
+<!-- PAGE 1: FEATURES -->
+<div class="page" id="page-1">
+  <div class="page-title">CORE <span>CAPABILITIES</span></div>
+  <div class="page-sub">◆ ENGINEERED FOR THE FUTURE ◆</div>
+  <div class="features-grid">
+    <div class="feat-card">
+      <span class="feat-num">01</span>
+      <span class="feat-icon">🧠</span>
+      <div class="feat-title">NEURAL VISION</div>
+      <div class="feat-desc">Multi-modal perception across image, video, and spatial data with human-level comprehension.</div>
+    </div>
+    <div class="feat-card">
+      <span class="feat-num">02</span>
+      <span class="feat-icon">⚡</span>
+      <div class="feat-title">REAL-TIME INFERENCE</div>
+      <div class="feat-desc">Sub-12ms response on edge hardware. Zero latency AI decisions at massive scale.</div>
+    </div>
+    <div class="feat-card">
+      <span class="feat-num">03</span>
+      <span class="feat-icon">🔮</span>
+      <div class="feat-title">PREDICTIVE ENGINE</div>
+      <div class="feat-desc">Foresight algorithms trained on temporal patterns across 40+ global industries.</div>
+    </div>
+    <div class="feat-card">
+      <span class="feat-num">04</span>
+      <span class="feat-icon">🛡️</span>
+      <div class="feat-title">QUANTUM SECURITY</div>
+      <div class="feat-desc">Post-quantum cryptography ensuring your intelligence stays yours. Fully auditable.</div>
+    </div>
+    <div class="feat-card">
+      <span class="feat-num">05</span>
+      <span class="feat-icon">🌐</span>
+      <div class="feat-title">ADAPTIVE MESH</div>
+      <div class="feat-desc">Self-healing distributed intelligence that evolves with your deployment needs.</div>
+    </div>
+    <div class="feat-card">
+      <span class="feat-num">06</span>
+      <span class="feat-icon">🎯</span>
+      <div class="feat-title">PRECISION TUNING</div>
+      <div class="feat-desc">Fine-tune on your domain with as little as 100 labeled examples. No PhDs required.</div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 2: TECHNOLOGY -->
+<div class="page" id="page-2">
+  <div class="tech-wrapper">
+    <div class="tech-left">
+      <div style="position:relative; margin-bottom: 36px;">
+        <div class="tech-big-num">03</div>
+        <div class="tech-heading">
+          Built on<br><em>Quantum</em><br>Architecture
+        </div>
+      </div>
+      <p class="tech-para">Our proprietary Quantum-Neural hybrid architecture processes information through 47 parallel cognitive streams, achieving unprecedented accuracy while consuming 80% less energy than traditional transformers.</p>
+      <div class="tech-bars">
+        <div class="bar-row">
+          <div class="bar-label"><span>PROCESSING POWER</span><span>98%</span></div>
+          <div class="bar-track"><div class="bar-fill" style="--w:98%"></div></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label"><span>CONTEXTUAL MEMORY</span><span>94%</span></div>
+          <div class="bar-track"><div class="bar-fill" style="--w:94%"></div></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label"><span>REASONING DEPTH</span><span>91%</span></div>
+          <div class="bar-track"><div class="bar-fill" style="--w:91%"></div></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label"><span>ENERGY EFFICIENCY</span><span>87%</span></div>
+          <div class="bar-track"><div class="bar-fill" style="--w:87%"></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="tech-right">
+      <div class="cube-scene">
+        <div class="cube">
+          <div class="cube-face front">NEXUS</div>
+          <div class="cube-face back">CORE</div>
+          <div class="cube-face left">LEARN</div>
+          <div class="cube-face right">THINK</div>
+          <div class="cube-face top">CREATE</div>
+          <div class="cube-face bottom">EVOLVE</div>
+        </div>
+      </div>
+      <div style="text-align:center; margin-top: 40px;">
+        <div style="font-family:'Space Mono',monospace; font-size:0.6rem; letter-spacing:3px; color:rgba(0,245,255,0.4); margin-bottom:12px;">SYSTEM METRICS</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div style="background:rgba(0,245,255,0.04); border:1px solid rgba(0,245,255,0.1); padding:14px; text-align:center;">
+            <div style="font-family:'Orbitron',monospace; font-size:1.2rem; color:var(--cyan); font-weight:900;">47</div>
+            <div style="font-family:'Space Mono',monospace; font-size:0.5rem; color:rgba(224,224,255,0.35); letter-spacing:2px; margin-top:4px;">STREAMS</div>
+          </div>
+          <div style="background:rgba(0,245,255,0.04); border:1px solid rgba(0,245,255,0.1); padding:14px; text-align:center;">
+            <div style="font-family:'Orbitron',monospace; font-size:1.2rem; color:var(--purple); font-weight:900;">∞</div>
+            <div style="font-family:'Space Mono',monospace; font-size:0.5rem; color:rgba(224,224,255,0.35); letter-spacing:2px; margin-top:4px;">SCALE</div>
+          </div>
+          <div style="background:rgba(0,245,255,0.04); border:1px solid rgba(0,245,255,0.1); padding:14px; text-align:center;">
+            <div style="font-family:'Orbitron',monospace; font-size:1.2rem; color:var(--pink); font-weight:900;">0ms</div>
+            <div style="font-family:'Space Mono',monospace; font-size:0.5rem; color:rgba(224,224,255,0.35); letter-spacing:2px; margin-top:4px;">COLD START</div>
+          </div>
+          <div style="background:rgba(0,245,255,0.04); border:1px solid rgba(0,245,255,0.1); padding:14px; text-align:center;">
+            <div style="font-family:'Orbitron',monospace; font-size:1.2rem; color:var(--cyan); font-weight:900;">256</div>
+            <div style="font-family:'Space Mono',monospace; font-size:0.5rem; color:rgba(224,224,255,0.35); letter-spacing:2px; margin-top:4px;">BIT DEPTH</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 3: PRODUCTS -->
+<div class="page" id="page-3">
+  <div class="page-title">OUR <span>PRODUCTS</span></div>
+  <div class="page-sub">◆ INTELLIGENCE AS A SERVICE ◆</div>
+  <div class="products-grid">
+    <div class="prod-card">
+      <div class="prod-glow"></div>
+      <div class="prod-tag">◆ FOUNDATION</div>
+      <div class="prod-name">NEXUS CORE</div>
+      <div class="prod-desc">The base intelligence layer. Deploy enterprise-grade AI with a single API call. Scales from startup to hyperscale.</div>
+      <div class="prod-arrow">↗</div>
+    </div>
+    <div class="prod-card">
+      <div class="prod-glow" style="background: radial-gradient(circle, rgba(0,245,255,0.1) 0%, transparent 70%);"></div>
+      <div class="prod-tag" style="color:var(--cyan); text-shadow: 0 0 10px var(--cyan);">◆ VISION</div>
+      <div class="prod-name">NEXUS SIGHT</div>
+      <div class="prod-desc">Autonomous visual intelligence. Process millions of images and video streams with unparalleled contextual understanding.</div>
+      <div class="prod-arrow">↗</div>
+    </div>
+    <div class="prod-card">
+      <div class="prod-glow" style="background: radial-gradient(circle, rgba(255,45,120,0.08) 0%, transparent 70%);"></div>
+      <div class="prod-tag" style="color:var(--purple); text-shadow: 0 0 10px var(--purple);">◆ LANGUAGE</div>
+      <div class="prod-name">NEXUS VOICE</div>
+      <div class="prod-desc">Multilingual NLP engine. 140 languages. Real-time transcription, translation, and sentiment analysis at scale.</div>
+      <div class="prod-arrow">↗</div>
+    </div>
+    <div class="prod-card">
+      <div class="prod-glow" style="background: radial-gradient(circle, rgba(0,245,255,0.06) 0%, transparent 70%);"></div>
+      <div class="prod-tag" style="color:rgba(0,245,255,0.7);">◆ AUTONOMOUS</div>
+      <div class="prod-name">NEXUS AGENT</div>
+      <div class="prod-desc">Fully autonomous AI agents that plan, reason, and execute complex multi-step workflows without human oversight.</div>
+      <div class="prod-arrow">↗</div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 4: CONTACT -->
+<div class="page" id="page-4">
+  <div class="contact-wrapper">
+    <div class="contact-left">
+      <div class="contact-headline">
+        Begin Your<br><span>Intelligence</span><br>Journey
+      </div>
+      <p class="contact-note">Join 2,400+ enterprises already operating at the frontier. Reach out and we'll architect a custom solution within 48 hours.</p>
+      <div class="contact-links">
+        <div class="c-link"><div class="c-link-dot"></div><span>hello@nexus.ai</span></div>
+        <div class="c-link"><div class="c-link-dot" style="background:var(--pink); box-shadow: 0 0 10px var(--pink);"></div><span>+1 (800) NEXUS-AI</span></div>
+        <div class="c-link"><div class="c-link-dot" style="background:var(--purple); box-shadow: 0 0 10px var(--purple);"></div><span>San Francisco · London · Tokyo</span></div>
+      </div>
+    </div>
+    <div class="contact-right">
+      <div class="contact-form">
+        <input class="form-input" type="text" placeholder="FULL NAME">
+        <input class="form-input" type="email" placeholder="EMAIL ADDRESS">
+        <input class="form-input" type="text" placeholder="COMPANY">
+        <textarea class="form-input" placeholder="DESCRIBE YOUR USE CASE"></textarea>
+        <button class="btn-primary" style="width:100%; font-size:0.7rem; padding:18px; cursor:pointer;" onclick="handleSubmit()">INITIATE CONTACT →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── STATE ───
+let currentPage = 0;
+const totalPages = 5;
+let mouseX = 0, mouseY = 0;
+let cursorX = 0, cursorY = 0;
+let ringX = 0, ringY = 0;
+const trails = [];
+
+// ─── CURSOR ───
+document.addEventListener('mousemove', e => {
+  mouseX = e.clientX;
+  mouseY = e.clientY;
+  addTrail(e.clientX, e.clientY);
+});
+function animateCursor() {
+  cursorX += (mouseX - cursorX) * 0.18;
+  cursorY += (mouseY - cursorY) * 0.18;
+  ringX += (mouseX - ringX) * 0.08;
+  ringY += (mouseY - ringY) * 0.08;
+  document.getElementById('cursor').style.cssText = `left:${cursorX}px;top:${cursorY}px;`;
+  document.getElementById('cursor-ring').style.cssText = `left:${ringX}px;top:${ringY}px;`;
+  requestAnimationFrame(animateCursor);
+}
+animateCursor();
+
+// ─── MOUSE TRAIL ───
+function addTrail(x, y) {
+  const el = document.createElement('div');
+  el.className = 'trail';
+  el.style.left = x + 'px';
+  el.style.top = y + 'px';
+  el.style.opacity = '0.4';
+  document.body.appendChild(el);
+  setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity 0.5s'; }, 50);
+  setTimeout(() => el.remove(), 600);
+}
+
+// ─── BACKGROUND PARTICLE CANVAS ───
+const canvas = document.getElementById('bg-canvas');
+const ctx = canvas.getContext('2d');
+let particles = [];
+let w, h;
+function resize() {
+  w = canvas.width = window.innerWidth;
+  h = canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+
+class Particle {
+  constructor() { this.reset(); }
+  reset() {
+    this.x = Math.random() * w;
+    this.y = Math.random() * h;
+    this.size = Math.random() * 1.5 + 0.3;
+    this.speed = Math.random() * 0.4 + 0.1;
+    this.angle = Math.random() * Math.PI * 2;
+    this.opacity = Math.random() * 0.5 + 0.1;
+    this.color = Math.random() > 0.7 ? '#7b2fff' : '#00f5ff';
+  }
+  update() {
+    this.x += Math.cos(this.angle) * this.speed;
+    this.y += Math.sin(this.angle) * this.speed;
+    this.angle += (Math.random() - 0.5) * 0.04;
+    if (this.x < 0 || this.x > w || this.y < 0 || this.y > h) this.reset();
+  }
+  draw() {
+    ctx.save();
+    ctx.globalAlpha = this.opacity;
+    ctx.fillStyle = this.color;
+    ctx.shadowBlur = 8;
+    ctx.shadowColor = this.color;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+for (let i = 0; i < 120; i++) particles.push(new Particle());
+
+// Connection lines
+function drawConnections() {
+  for (let i = 0; i < particles.length; i++) {
+    for (let j = i + 1; j < particles.length; j++) {
+      const dx = particles[i].x - particles[j].x;
+      const dy = particles[i].y - particles[j].y;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      if (dist < 120) {
+        ctx.save();
+        ctx.globalAlpha = (1 - dist/120) * 0.12;
+        ctx.strokeStyle = '#00f5ff';
+        ctx.lineWidth = 0.5;
+        ctx.beginPath();
+        ctx.moveTo(particles[i].x, particles[i].y);
+        ctx.lineTo(particles[j].x, particles[j].y);
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+  }
+}
+
+// Mouse repel
+function repelFromMouse() {
+  particles.forEach(p => {
+    const dx = p.x - mouseX;
+    const dy = p.y - mouseY;
+    const dist = Math.sqrt(dx*dx + dy*dy);
+    if (dist < 100) {
+      const force = (100 - dist) / 100;
+      p.x += (dx / dist) * force * 3;
+      p.y += (dy / dist) * force * 3;
+    }
+  });
+}
+
+function loop() {
+  ctx.clearRect(0, 0, w, h);
+  repelFromMouse();
+  drawConnections();
+  particles.forEach(p => { p.update(); p.draw(); });
+  requestAnimationFrame(loop);
+}
+loop();
+
+// ─── PAGE NAVIGATION ───
+function goTo(n) {
+  document.getElementById('page-' + currentPage).classList.remove('active');
+  document.querySelectorAll('.dot')[currentPage].classList.remove('active');
+  document.getElementById('nav-' + currentPage).classList.remove('active-link');
+  currentPage = n;
+  document.getElementById('page-' + currentPage).classList.add('active');
+  document.querySelectorAll('.dot')[currentPage].classList.add('active');
+  document.getElementById('nav-' + currentPage).classList.add('active-link');
+}
+
+// ─── WHEEL NAVIGATION ───
+let wheelLock = false;
+window.addEventListener('wheel', e => {
+  if (wheelLock) return;
+  wheelLock = true;
+  if (e.deltaY > 0 && currentPage < totalPages - 1) goTo(currentPage + 1);
+  else if (e.deltaY < 0 && currentPage > 0) goTo(currentPage - 1);
+  setTimeout(() => wheelLock = false, 800);
+});
+
+// ─── KEYBOARD NAVIGATION ───
+window.addEventListener('keydown', e => {
+  if (e.key === 'ArrowDown' || e.key === 'ArrowRight') { if (currentPage < totalPages-1) goTo(currentPage+1); }
+  if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') { if (currentPage > 0) goTo(currentPage-1); }
+});
+
+// ─── TOUCH ───
+let touchStart = 0;
+window.addEventListener('touchstart', e => touchStart = e.touches[0].clientY);
+window.addEventListener('touchend', e => {
+  const diff = touchStart - e.changedTouches[0].clientY;
+  if (Math.abs(diff) > 50) {
+    if (diff > 0 && currentPage < totalPages-1) goTo(currentPage+1);
+    else if (diff < 0 && currentPage > 0) goTo(currentPage-1);
+  }
+});
+
+// ─── TIME ───
+function updateTime() {
+  const now = new Date();
+  document.getElementById('time-display').textContent =
+    now.toTimeString().slice(0,8);
+}
+setInterval(updateTime, 1000);
+updateTime();
+
+// ─── CONTACT SUBMIT ───
+function handleSubmit() {
+  const btn = event.target;
+  btn.textContent = 'TRANSMISSION SENT ✓';
+  btn.style.background = 'linear-gradient(135deg, #00f5ff, #00ff88)';
+  setTimeout(() => {
+    btn.textContent = 'INITIATE CONTACT →';
+    btn.style.background = '';
+  }, 3000);
+}
+</script>
+</body>
+</html>
